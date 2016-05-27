@@ -10,7 +10,8 @@ import sigrun.serialization.TraceHeaderReader;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
+//import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.FileChannel;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,17 +20,17 @@ import java.util.Set;
 /**
  * Created by maksenov on 15/01/15.
  */
-public class SEGYStream implements Iterable<SeismicTrace>, Closeable {
+public class SEGYStream implements Iterable<LiteSeismicTrace>, Closeable {
     private static final Logger log = LoggerFactory.getLogger(SEGYStream.class);
-	private final ReadableByteChannel chan;
+	private final FileChannel chan;
     private final TraceHeaderReader traceHeaderReader;
     private TextHeader textHeader;
     private BinaryHeader binaryHeader;
     private long position = 0;
     private Set<ParseProgressListener> listeners = new HashSet<ParseProgressListener>();
-    private SeismicTrace nextTrace;
+    private LiteSeismicTrace nextTrace;
 
-	protected SEGYStream(ReadableByteChannel chan,
+	protected SEGYStream(FileChannel chan,
                          TextHeaderReader textHeaderReader,
                          BinaryHeaderReader binaryHeaderReader,
                          TraceHeaderReader traceHeaderReader,
@@ -49,7 +50,7 @@ public class SEGYStream implements Iterable<SeismicTrace>, Closeable {
         this.chan = chan;
     }
 
-	private void readTextHeader(ReadableByteChannel chan, TextHeaderReader textHeaderReader) throws IOException {
+	private void readTextHeader(FileChannel chan, TextHeaderReader textHeaderReader) throws IOException {
         ByteBuffer buf = ByteBuffer.allocate(TextHeader.TEXT_HEADER_SIZE);
 
         if (chan.read(buf) != TextHeader.TEXT_HEADER_SIZE) {
@@ -62,7 +63,7 @@ public class SEGYStream implements Iterable<SeismicTrace>, Closeable {
         assert this.position == TextHeader.TEXT_HEADER_SIZE;
     }
 
-	private void readBinaryHeader(ReadableByteChannel chan, BinaryHeaderReader binaryHeaderReader) throws IOException {
+	private void readBinaryHeader(FileChannel chan, BinaryHeaderReader binaryHeaderReader) throws IOException {
         ByteBuffer buf = ByteBuffer.allocate(BinaryHeader.BIN_HEADER_LENGTH);
 
         if (chan.read(buf) != BinaryHeader.BIN_HEADER_LENGTH) {
@@ -92,15 +93,24 @@ public class SEGYStream implements Iterable<SeismicTrace>, Closeable {
             final TraceHeader header = traceHeaderReader.read(traceBuf.array());
             final int dataLength = binaryHeader.getDataSampleCode().getSize() * header.getNumberOfSamples();
 
+            long currPos = chan.position();
+            if(chan.position(currPos+dataLength)==null)
+            {
+                log.info("Not enough bytes to read trace data. Looks like file is corrupted. Exiting.");
+                chan.close();
+                return false;
+            }
+            /*
             ByteBuffer dataBuf = ByteBuffer.allocate(dataLength);
-
             if (chan.read(dataBuf) != dataLength) {
                 log.info("Not enough bytes to read trace data. Looks like file is corrupted. Exiting.");
                 chan.close();
                 return false;
             }
-
             this.nextTrace = SeismicTrace.create(header, dataBuf.array(), binaryHeader.getDataSampleCode());
+            */
+
+            this.nextTrace = LiteSeismicTrace.create(header, binaryHeader.getDataSampleCode());
             increasePosition(TraceHeader.TRACE_HEADER_LENGTH + dataLength);
 
             return true;
@@ -148,11 +158,11 @@ public class SEGYStream implements Iterable<SeismicTrace>, Closeable {
     }
 
     @Override
-    public Iterator<SeismicTrace> iterator() {
+    public Iterator<LiteSeismicTrace> iterator() {
         return new SeismicTraceIterator(this);
     }
 
-    private class SeismicTraceIterator implements Iterator<SeismicTrace> {
+    private class SeismicTraceIterator implements Iterator<LiteSeismicTrace> {
         private final SEGYStream parent;
 
         private SeismicTraceIterator(SEGYStream parent) {
@@ -169,9 +179,9 @@ public class SEGYStream implements Iterable<SeismicTrace>, Closeable {
         }
 
         @Override
-        public SeismicTrace next() {
+        public LiteSeismicTrace next() {
             if (hasNext()) {
-                SeismicTrace result = parent.nextTrace;
+                LiteSeismicTrace result = parent.nextTrace;
                 parent.nextTrace = null;
 
                 return result;

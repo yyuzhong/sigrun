@@ -94,7 +94,7 @@ public class SampleReadRoutine {
             printTextHeader(segyStream.getTextHeader());
             printBinHeaderInfo(segyStream.getBinaryHeader());
 
-            for (SeismicTrace trace : segyStream) {
+            for (LiteSeismicTrace trace : segyStream) {
                 printTraceInfo(trace);
             }
 
@@ -121,7 +121,7 @@ public class SampleReadRoutine {
         System.out.println("Data sample code:" + binaryHeader.getDataSampleCode());
     }
 
-    private static void printTraceInfo(SeismicTrace trace) {
+    private static void printTraceInfo(LiteSeismicTrace trace) {
         System.out.println("-------------------Trace Header info----------------------------");
         //System.out.println("Trace Seq in Line " + trace.getHeader().getTraceSequenceNumberWL());
         System.out.println("5 Trace Seq in File " + trace.getHeader().getTraceSequenceNumberWS());

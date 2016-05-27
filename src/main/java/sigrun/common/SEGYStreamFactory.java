@@ -3,7 +3,8 @@ package sigrun.common;
 import sigrun.serialization.*;
 
 import java.io.FileInputStream;
-import java.nio.channels.ReadableByteChannel;
+//import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,11 +32,11 @@ public class SEGYStreamFactory {
         return new SEGYStreamFactory(charset, binaryHeaderFormat, traceHeaderFormat);
     }
 
-    public SEGYStream makeStream(ReadableByteChannel chan) {
+    public SEGYStream makeStream(FileChannel chan) {
         return makeStream(chan, Collections.<ParseProgressListener>emptySet());
     }
 
-    public SEGYStream makeStream(ReadableByteChannel chan, Collection<ParseProgressListener> listeners) {
+    public SEGYStream makeStream(FileChannel chan, Collection<ParseProgressListener> listeners) {
         return new SEGYStream(chan, textHeaderReader, binaryHeaderReader, traceHeaderReader, listeners);
     }
 
