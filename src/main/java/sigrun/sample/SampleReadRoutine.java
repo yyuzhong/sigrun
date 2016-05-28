@@ -94,10 +94,20 @@ public class SampleReadRoutine {
             printTextHeader(segyStream.getTextHeader());
             printBinHeaderInfo(segyStream.getBinaryHeader());
 
-            for (LiteSeismicTrace trace : segyStream) {
-                printTraceInfo(trace);
+            if(true) {
+                for (LiteSeismicTrace trace : segyStream) {
+                    printTraceInfo(trace);
+                }
+            } else {
+                TraceHeader t1 = segyStream.peekTraceHeader();
+                long sn = t1.getNumberOfSamples();
+                long tn = segyStream.getNumberOfTrace(sn);
+                for(int i=0;i<tn;i++)
+                {
+                    TraceHeader tmp = segyStream.getTraceHeader(i,sn);
+                    printTraceHeader(tmp);
+                }
             }
-
             final long timeEnd = System.currentTimeMillis() - startTime;
             System.out.println("Parsing took: " + timeEnd + " ms.");
         } catch (FileNotFoundException e) {
@@ -121,28 +131,31 @@ public class SampleReadRoutine {
         System.out.println("Data sample code:" + binaryHeader.getDataSampleCode());
     }
 
+    private static void printTraceHeader(TraceHeader thd) {
+        System.out.println("<<<<<<<<<<<<<<<<<<<<<<<Trace Header info<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        //System.out.println("Trace Seq in Line " + thd.getTraceSequenceNumberWL());
+        System.out.println("5 Trace Seq in File " + thd.getTraceSequenceNumberWS());
+        System.out.println("9 Original Record Number " + thd.getOriginalFieldRecordNumber());
+        System.out.println("13 Original Trace Number " + thd.getTraceNumberWOFR());
+        System.out.println("181 X of CDP: " + thd.getxOfCDPPosition());
+        System.out.println("189 Inline Number: " + thd.getInLineNumber());
+        //System.out.println("221 Inline number: " + thd.getSourceEnergyDirection());
+
+        System.out.println("**************************");
+        System.out.println("17 Endergy Source Point Number " + thd.getEnergySourcePointNumber());
+        System.out.println("21 Ensemble Number " + thd.getEnsembleNumber());
+        System.out.println("185 Y of CDP: " + thd.getyOfCDPPosition());
+        System.out.println("193 Cross Number: " + thd.getCrossLineNumber());
+
+        System.out.println("**************************");
+        System.out.println("115 Number of samples: " + thd.getNumberOfSamples());
+
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>End of Trace Header info>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    }
     private static void printTraceInfo(LiteSeismicTrace trace) {
-        System.out.println("-------------------Trace Header info----------------------------");
-        //System.out.println("Trace Seq in Line " + trace.getHeader().getTraceSequenceNumberWL());
-        System.out.println("5 Trace Seq in File " + trace.getHeader().getTraceSequenceNumberWS());
-        System.out.println("9 Original Record Number " + trace.getHeader().getOriginalFieldRecordNumber());
-        System.out.println("13 Original Trace Number " + trace.getHeader().getTraceNumberWOFR());
-        System.out.println("181 X of CDP: " + trace.getHeader().getxOfCDPPosition());
-        System.out.println("189 Inline Number: " + trace.getHeader().getInLineNumber());
-        System.out.println("221 Inline number: " + trace.getHeader().getSourceEnergyDirection());
-
-        System.out.println("**********************************************************");
-        System.out.println("17 Endergy Source Point Number " + trace.getHeader().getEnergySourcePointNumber());
-        System.out.println("21 Ensemble Number " + trace.getHeader().getEnsembleNumber());
-        System.out.println("185 Y of CDP: " + trace.getHeader().getyOfCDPPosition());
-        System.out.println("193 Cross Number: " + trace.getHeader().getCrossLineNumber());
-
-        System.out.println("**********************************************************");
-        System.out.println("115 Number of samples: " + trace.getHeader().getNumberOfSamples());
-
+        printTraceHeader(trace.getHeader());
         //System.out.println("Size of array: " + trace.getValues().length);
         //System.out.printf("Values: %.10f : %.10f%n", trace.getMin(), trace.getMax());
         //System.out.printf("Diff: %.10f%n", trace.getMax() - trace.getMin());
-        System.out.println("<<<<<<<<<<<<<<<<<<<<< End of Trace Header info>>>>>>>>>>>>>>>>>>>>>>>>>>");
     }
 }
