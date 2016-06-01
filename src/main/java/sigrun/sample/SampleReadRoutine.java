@@ -64,7 +64,10 @@ public class SampleReadRoutine {
                 withYOfCDPPositionFormat(FormatEntry.create(184, 188)).
                 withInLineNumberFormat(FormatEntry.create(188, 192)).
                 withCrossLineNumberFormat(FormatEntry.create(192, 196)).
-                withSourceEnergyDirectionFormat(FormatEntry.create(220, 224)).
+                withTransductionConstantFormat(FormatEntry.create(204, 210)).
+                withTransductionUnitsFormat(FormatEntry.create(210, 212)).
+                withSourceEnergyDirectionFormat(FormatEntry.create(218, 224)).
+                withSourceMeasurementFormat(FormatEntry.create(224, 230)).
                 build();
     }
 
@@ -139,13 +142,16 @@ public class SampleReadRoutine {
         System.out.println("13 Original Trace Number " + thd.getTraceNumberWOFR());
         System.out.println("181 X of CDP: " + thd.getxOfCDPPosition());
         System.out.println("189 Inline Number: " + thd.getInLineNumber());
-        //System.out.println("221 Inline number: " + thd.getSourceEnergyDirection());
+        System.out.println("205 Transduction Constant: " + thd.getTransductionConstantRev());
+        System.out.println("221 Source Engergy Direction: " + thd.getSourceEnergyDirectionRev());
 
         System.out.println("**************************");
         System.out.println("17 Endergy Source Point Number " + thd.getEnergySourcePointNumber());
         System.out.println("21 Ensemble Number " + thd.getEnsembleNumber());
         System.out.println("185 Y of CDP: " + thd.getyOfCDPPosition());
         System.out.println("193 Cross Number: " + thd.getCrossLineNumber());
+        System.out.println("209 Transduction Unites Format: " + thd.getTransductionUnitsRev());
+        System.out.println("225 Source Mesaurement: " + thd.getSourceMeasurementRev());
 
         System.out.println("**************************");
         System.out.println("115 Number of samples: " + thd.getNumberOfSamples());

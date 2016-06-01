@@ -2,6 +2,10 @@ package sigrun.common;
 
 import java.util.Arrays;
 
+import static sigrun.converters.ByteANumberConverter.byteAToInt;
+import static sigrun.converters.ByteANumberConverter.byteAToShort;
+import static sigrun.converters.NumberByteAConverter.shortToByteA;
+
 @SuppressWarnings({"RedundantIfStatement", "UnusedDeclaration", "ConstantConditions"})
 public class TraceHeader {
     @Reportable(value = "Position In File")
@@ -1221,6 +1225,12 @@ public class TraceHeader {
     public byte[] getTransductionConstant() {
         return transductionConstant;
     }
+    /*YZ, 205-209 may be inline index*/
+    public Integer getTransductionConstantRev() {
+        byte[] tcs = getTransductionConstant();
+        Integer res = byteAToInt(tcs, 0);
+        return res;
+    }
 
     public void setTransductionConstant(byte[] transductionConstant) {
         this.transductionConstant = transductionConstant;
@@ -1228,6 +1238,19 @@ public class TraceHeader {
 
     public Short getTransductionUnits() {
         return transductionUnits;
+    }
+    /*YZ, 209-213 may be xline index*/
+    public Integer getTransductionUnitsRev() {
+        byte[] tcs = getTransductionConstant();
+        Short  tus = getTransductionUnits();
+        byte[] tmp = shortToByteA(tus);
+        byte[] com = new byte[4];
+        com[0] = tcs[4];
+        com[1] = tcs[5];
+        com[2] = tmp[0];
+        com[3] = tmp[1];
+        Integer res = byteAToInt(com, 0);
+        return res;
     }
 
     public void setTransductionUnits(Short transductionUnits) {
@@ -1261,6 +1284,12 @@ public class TraceHeader {
     public byte[] getSourceEnergyDirection() {
         return sourceEnergyDirection;
     }
+    /*YZ, 221-225 may be inline index, Geograme, Petrel*/
+    public Integer getSourceEnergyDirectionRev() {
+        byte[] sed = getSourceEnergyDirection();
+        Integer res = byteAToInt(sed, 2);
+        return res;
+    }
 
     public void setSourceEnergyDirection(byte[] sourceEnergyDirection) {
         this.sourceEnergyDirection = sourceEnergyDirection;
@@ -1268,6 +1297,13 @@ public class TraceHeader {
 
     public byte[] getSourceMeasurement() {
         return sourceMeasurement;
+    }
+
+    /*YZ, 225-208 may be inline index*/
+    public Integer getSourceMeasurementRev() {
+        byte[] sm = getSourceMeasurement();
+        Integer res = byteAToInt(sm, 0);
+        return res;
     }
 
     public void setSourceMeasurement(byte[] sourceMeasurement) {
