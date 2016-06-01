@@ -11,6 +11,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Vector;
 
 /**
  *
@@ -96,7 +97,7 @@ public class SampleReadRoutine {
 
             printTextHeader(segyStream.getTextHeader());
             printBinHeaderInfo(segyStream.getBinaryHeader());
-
+            /*
             if(true) {
                 for (LiteSeismicTrace trace : segyStream) {
                     printTraceInfo(trace);
@@ -111,6 +112,21 @@ public class SampleReadRoutine {
                     printTraceHeader(tmp);
                 }
             }
+            */
+
+            TraceHeader tp1 = segyStream.peekTraceHeader();
+            long sn = tp1.getNumberOfSamples();
+            long tn = segyStream.getNumberOfTrace(sn);
+            TraceHeader th1 =  segyStream.getTraceHeader(0,sn);
+            TraceHeader th2 =  segyStream.getTraceHeader(1,sn);
+            TraceHeader thN =  segyStream.getTraceHeader(tn-1,sn);
+
+            printTraceHeader(th1);
+            printTraceHeader(th2);
+            printTraceHeader(thN);
+
+            checkTraceHeaderConfig(th1,th2,thN,tn);
+
             final long timeEnd = System.currentTimeMillis() - startTime;
             System.out.println("Parsing took: " + timeEnd + " ms.");
         } catch (FileNotFoundException e) {
@@ -121,6 +137,122 @@ public class SampleReadRoutine {
 
         System.exit(0);
     }
+
+    private static boolean checkTraceHeaderConfig(TraceHeader thd1, TraceHeader thd2, TraceHeader thdN, long numTraces) {
+        Vector<Integer> ilnPositions1 = new Vector<Integer>(4);
+        Vector<Integer> xlnPositions1 = new Vector<Integer>(4);
+        Vector<Integer> ilnPositions2 = new Vector<Integer>(4);
+        Vector<Integer> xlnPositions2 = new Vector<Integer>(4);
+        Vector<Integer> ilnPositionsN = new Vector<Integer>(4);
+        Vector<Integer> xlnPositionsN = new Vector<Integer>(4);
+
+        ilnPositions1.addElement(thd1.getInLineNumber()); /*189*/
+        ilnPositions1.addElement(thd1.getSourceEnergyDirectionRev()); /*221*/
+        ilnPositions1.addElement(thd1.getTransductionConstantRev()); /*205*/
+        ilnPositions1.addElement(thd1.getTraceSequenceNumberWS()); /*5*/
+        ilnPositions1.addElement(thd1.getOriginalFieldRecordNumber());/*9*/
+        ilnPositions1.addElement(thd1.getTraceNumberWOFR()); /*13*/
+        ilnPositions1.addElement(thd1.getxOfCDPPosition()); /*181*/
+
+        ilnPositions2.addElement(thd2.getInLineNumber());
+        ilnPositions2.addElement(thd2.getSourceEnergyDirectionRev());
+        ilnPositions2.addElement(thd2.getTransductionConstantRev());
+        ilnPositions2.addElement(thd2.getTraceSequenceNumberWS());
+        ilnPositions2.addElement(thd2.getOriginalFieldRecordNumber());
+        ilnPositions2.addElement(thd2.getTraceNumberWOFR());
+        ilnPositions2.addElement(thd2.getxOfCDPPosition());
+
+        ilnPositionsN.addElement(thdN.getInLineNumber());
+        ilnPositionsN.addElement(thdN.getSourceEnergyDirectionRev());
+        ilnPositionsN.addElement(thdN.getTransductionConstantRev());
+        ilnPositionsN.addElement(thdN.getTraceSequenceNumberWS());
+        ilnPositionsN.addElement(thdN.getOriginalFieldRecordNumber());
+        ilnPositionsN.addElement(thdN.getTraceNumberWOFR());
+        ilnPositionsN.addElement(thdN.getxOfCDPPosition());
+
+        xlnPositions1.addElement(thd1.getCrossLineNumber()); /*193*/
+        xlnPositions1.addElement(thd1.getEnsembleNumber());  /*21*/
+        xlnPositions1.addElement(thd1.getTransductionUnitsRev()); /*209*/
+        xlnPositions1.addElement(thd1.getSourceMeasurementRev()); /*225*/
+        xlnPositions1.addElement(thd1.getyOfCDPPosition()); /*185*/
+        xlnPositions1.addElement(thd1.getEnergySourcePointNumber()); /*17, YZ*/
+
+        xlnPositions2.addElement(thd2.getCrossLineNumber()); /*193*/
+        xlnPositions2.addElement(thd2.getEnsembleNumber());  /*21*/
+        xlnPositions2.addElement(thd2.getTransductionUnitsRev()); /*209*/
+        xlnPositions2.addElement(thd2.getSourceMeasurementRev()); /*225*/
+        xlnPositions2.addElement(thd2.getyOfCDPPosition()); /*185*/
+        xlnPositions2.addElement(thd2.getEnergySourcePointNumber()); /*17, YZ*/
+
+        xlnPositionsN.addElement(thdN.getCrossLineNumber()); /*193*/
+        xlnPositionsN.addElement(thdN.getEnsembleNumber());  /*21*/
+        xlnPositionsN.addElement(thdN.getTransductionUnitsRev()); /*209*/
+        xlnPositionsN.addElement(thdN.getSourceMeasurementRev()); /*225*/
+        xlnPositionsN.addElement(thdN.getyOfCDPPosition()); /*185*/
+        xlnPositionsN.addElement(thdN.getEnergySourcePointNumber()); /*17, YZ*/
+
+        int ilinSize = ilnPositions1.size();
+        int xlinSize = xlnPositions1.size();
+
+        int il1, il2, ilN, ilinc, ilcount;
+        int xl1, xl2, xlN, xlinc, xlcount;
+
+        boolean cfgOK = false;
+
+        for(int i=0; i<ilinSize; i++) {
+
+            il1 = ilnPositions1.get(i);
+            ilN = ilnPositionsN.get(i);
+            System.out.println("-------------------------------" + i + "---------------------------------"); 
+            for(int x=0; x<xlinSize; x++) {
+                xl1 = xlnPositions1.get(x);
+                xl2 = xlnPositions2.get(x);
+                xlN = xlnPositionsN.get(x);
+
+                xlinc = xl2 - xl1;
+                xlcount = (xlinc==0) ? 1:(int) Math.floor(1.5 + (xlN-xl1)/xlinc);
+                ilcount = (xlcount == 0) ? 1:(int) Math.floor(0.5 + numTraces / xlcount );
+                ilinc = (ilcount ==0) ? 0 : 1 + Math.abs(ilN - il1 - 1) / ilcount;
+                ilinc = (ilN>il1) ? ilinc: -ilinc;
+                ilcount = (ilinc ==0) ? 1: (int) Math.floor(1.5 + (ilN - il1) / ilinc);
+
+                System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxx"+x+"xxxxxxxxxxxxxxxxxxxxxx"); 
+                System.out.println("Xline Min: "  + xl1);
+                System.out.println("Xline 2: "  + xl2);
+                System.out.println("Xline Max: "  + xlN);
+                System.out.println("Xline Step: "  + xlinc);
+                System.out.println("Xline count: "  + xlcount);
+
+                System.out.println("Inline Min: "  + il1);
+                System.out.println("Inline Max: "  + ilN);
+                System.out.println("Inline Step: " + ilinc);
+                System.out.println("Inline Count: "  + ilcount);
+
+                System.out.println("Number of Traces " + numTraces);
+
+
+                if(cfgOK = (ilcount * xlcount == numTraces && xlcount > 1 && 
+                            Math.abs(xlinc) < 100000 && Math.abs(ilinc)<100000)) {
+                    System.out.println("******************" + x + "*********************"); 
+                    System.out.println("Xline Min: "  + xl1);
+                    System.out.println("Xline 2: "  + xl2);
+                    System.out.println("Xline Max: "  + xlN);
+                    System.out.println("Xline Step: "  + xlinc);
+                    System.out.println("Xline Count: "  + xlcount);
+                    System.out.println("Inline Min: " + il1);
+                    System.out.println("Inline Max: " + ilN);
+                    System.out.println("Inline Step: " + ilinc);
+                    System.out.println("Inline Count: " + ilcount);
+                    System.out.println("Number of Traces " + numTraces);
+                    break;
+                }
+            }
+            if(cfgOK) break;
+        }    
+
+        return cfgOK;
+    }
+
 
     private static void printTextHeader(TextHeader header) {
         System.out.println("Text Header info...");
