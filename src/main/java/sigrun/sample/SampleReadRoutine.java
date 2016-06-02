@@ -125,6 +125,7 @@ public class SampleReadRoutine {
             printTraceHeader(th2);
             printTraceHeader(thN);
 
+            //TraceHeader thM = getMaxXlineTraceHeader(segyStream, sn, tn);
             checkTraceHeaderConfig(th1,th2,thN,tn);
 
             final long timeEnd = System.currentTimeMillis() - startTime;
@@ -138,7 +139,29 @@ public class SampleReadRoutine {
         System.exit(0);
     }
 
-    private static boolean checkTraceHeaderConfig(TraceHeader thd1, TraceHeader thd2, TraceHeader thdN, long numTraces) {
+    private static TraceHeader getMaxXlineTraceHeader(SEGYStream segyStream, long numSamples, long numTraces) {
+        TraceHeader res = null;
+
+        TraceHeader prev = segyStream.getTraceHeader(0,numSamples);
+        for(int i=1;i<numTraces;i++)
+        {
+            TraceHeader tmp = segyStream.getTraceHeader(i,numSamples);
+            if(prev.getCrossLineNumber() > tmp.getCrossLineNumber()) break;
+            if(prev.getEnsembleNumber() > tmp.getEnsembleNumber()) break;
+            if(prev.getTransductionUnitsRev() > tmp.getTransductionUnitsRev()) break;
+            if(prev.getSourceMeasurementRev() > tmp.getSourceMeasurementRev()) break;
+            if(prev.getyOfCDPPosition() > tmp.getyOfCDPPosition()) break;
+            if(prev.getEnergySourcePointNumber() > tmp.getEnergySourcePointNumber()) break;
+            
+            prev = tmp;   
+        }
+
+        return prev;
+    }
+
+
+    private static boolean checkTraceHeaderConfig(TraceHeader thd1, TraceHeader thd2, 
+            TraceHeader thdN, long numTraces) {
         Vector<Integer> ilnPositions1 = new Vector<Integer>(4);
         Vector<Integer> xlnPositions1 = new Vector<Integer>(4);
         Vector<Integer> ilnPositions2 = new Vector<Integer>(4);
