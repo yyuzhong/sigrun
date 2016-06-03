@@ -235,13 +235,40 @@ public class SampleReadRoutine {
     }
 
     private static TraceHeader getXlineTraceInfo(SEGYStream segyStream, long numSamples, long numTraces, int xidx) {
+
         TraceHeader res = null;
-        int i = 0;
         int xlineDiff = Integer.MIN_VALUE;
         int xlineMax = Integer.MIN_VALUE;
         int xlineTmp = -1;
         int xlineMin = Integer.MAX_VALUE;
         int xlineInc = 0;
+
+        TraceHeader thd1 = segyStream.getTraceHeader(0,numSamples);
+        TraceHeader thd2 = segyStream.getTraceHeader(1,numSamples);
+
+        switch(xidx)
+        {
+            case 193:
+                xlineInc = thd2.getCrossLineNumber() - thd1.getCrossLineNumber(); 
+                break;
+            case 21: 
+                xlineInc = thd2.getEnsembleNumber() - thd1.getEnsembleNumber(); 
+                break;
+            case 209:
+                xlineInc = thd2.getTransductionUnitsRev() - thd1.getTransductionUnitsRev();
+                break;
+            case 225:
+                xlineInc = thd2.getSourceMeasurementRev() - thd1.getSourceMeasurementRev();
+                break;
+            case 185:
+                xlineInc = thd2.getyOfCDPPosition() - thd1.getyOfCDPPosition();
+                break;
+            case 17:
+                xlineInc = thd2.getEnergySourcePointNumber() - thd1.getEnergySourcePointNumber();
+                break;
+        }
+
+        int i = 0;
 
         while(i<numTraces-1)
         {
@@ -311,31 +338,6 @@ public class SampleReadRoutine {
                     break;
                 }
             }
-        }
-
-        TraceHeader thd1 = segyStream.getTraceHeader(0,numSamples);
-        TraceHeader thd2 = segyStream.getTraceHeader(1,numSamples);
-
-        switch(xidx)
-        {
-            case 193:
-                xlineInc = thd2.getCrossLineNumber() - thd1.getCrossLineNumber(); 
-                break;
-            case 21: 
-                xlineInc = thd2.getEnsembleNumber() - thd1.getEnsembleNumber(); 
-                break;
-            case 209:
-                xlineInc = thd2.getTransductionUnitsRev() - thd1.getTransductionUnitsRev();
-                break;
-            case 225:
-                xlineInc = thd2.getSourceMeasurementRev() - thd1.getSourceMeasurementRev();
-                break;
-            case 185:
-                xlineInc = thd2.getyOfCDPPosition() - thd1.getyOfCDPPosition();
-                break;
-            case 17:
-                xlineInc = thd2.getEnergySourcePointNumber() - thd1.getEnergySourcePointNumber();
-                break;
         }
 
         System.out.println("Min Xline: " + xlineMin + ", Max Xline: " + xlineMax + 
