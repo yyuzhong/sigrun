@@ -246,27 +246,34 @@ public class SampleReadRoutine {
         TraceHeader thd1 = segyStream.getTraceHeader(0,numSamples);
         TraceHeader thd2 = segyStream.getTraceHeader(1,numSamples);
 
-        Vector<Vector<Section>> lines = new Vector<Vector<Section>>();
+        Vector<Vector<Section>> linesInfo = new Vector<Vector<Section>>();
+        int secStart = -1;
 
         switch(xidx)
         {
             case 193:
                 xlineInc = thd2.getCrossLineNumber() - thd1.getCrossLineNumber(); 
+                secStart = thd1.getCrossLineNumber();
                 break;
             case 21: 
                 xlineInc = thd2.getEnsembleNumber() - thd1.getEnsembleNumber(); 
+                secStart = thd1.getEnsembleNumber();
                 break;
             case 209:
                 xlineInc = thd2.getTransductionUnitsRev() - thd1.getTransductionUnitsRev();
+                secStart = thd1.getTransductionUnitsRev();
                 break;
             case 225:
                 xlineInc = thd2.getSourceMeasurementRev() - thd1.getSourceMeasurementRev();
+                secStart = thd1.getSourceMeasurementRev();
                 break;
             case 185:
                 xlineInc = thd2.getyOfCDPPosition() - thd1.getyOfCDPPosition();
+                secStart = thd1.getyOfCDPPosition();
                 break;
             case 17:
                 xlineInc = thd2.getEnergySourcePointNumber() - thd1.getEnergySourcePointNumber();
+                secStart = thd1.getEnergySourcePointNumber();
                 break;
         }
 
@@ -277,6 +284,7 @@ public class SampleReadRoutine {
         {
             // TraceHeader header = segyStream.getTraceHeader(i,numSamples);
             TraceHeader header = tmp;
+            Vector<Section> line = new Vector<Section>();
             switch(xidx)
             {
                 case 193:
@@ -301,6 +309,8 @@ public class SampleReadRoutine {
 
             while(i<numTraces-1) {
                 i++;
+                TraceHeader prev = tmp;
+                long prevPos = segyStream.getPos();
                 tmp = segyStream.getTraceHeader(i,numSamples);
                 boolean found = false;
 
@@ -310,26 +320,80 @@ public class SampleReadRoutine {
                     case 193:
                         xlineTmp = tmp.getCrossLineNumber() - header.getCrossLineNumber(); 
                         if(tmp.getCrossLineNumber() > xlineMax) xlineMax = tmp.getCrossLineNumber(); 
+                        if(tmp.getCrossLineNumber() - prev.getCrossLineNumber() != xlineInc) 
+                        {
+                            Section sec = new Section(secStart, prev.getCrossLineNumber());
+                            sec.setPos(prevPos);
+                            line.addElement(sec);
+                            System.out.println("Add Section at " + i + " : " + sec.getStart() + " to " + sec.getEnd() + 
+                                    " Position: " + sec.getPos());
+                            secStart = tmp.getCrossLineNumber();
+                        }
                         break;
                     case 21: 
                         xlineTmp = tmp.getEnsembleNumber() - header.getEnsembleNumber(); 
                         if(tmp.getEnsembleNumber() > xlineMax) xlineMax = tmp.getEnsembleNumber(); 
+                        if(tmp.getEnsembleNumber() - prev.getEnsembleNumber() != xlineInc) 
+                        {
+                            Section sec = new Section(secStart, prev.getEnsembleNumber());
+                            sec.setPos(prevPos);
+                            line.addElement(sec);
+                            System.out.println("Add Section at " + i + " : " + sec.getStart() + " to " + sec.getEnd() + 
+                                    " Position: " + sec.getPos());
+                            secStart = tmp.getEnsembleNumber();
+                        }
                         break;
                     case 209:
                         xlineTmp = tmp.getTransductionUnitsRev() - header.getTransductionUnitsRev();
                         if(tmp.getTransductionUnitsRev() > xlineMax) xlineMax = tmp.getTransductionUnitsRev(); 
+                        if(tmp.getTransductionUnitsRev() - prev.getTransductionUnitsRev() != xlineInc) 
+                        {
+                            Section sec = new Section(secStart, prev.getTransductionUnitsRev());
+                            sec.setPos(prevPos);
+                            line.addElement(sec);
+                            System.out.println("Add Section at " + i + " : " + sec.getStart() + " to " + sec.getEnd() + 
+                                    " Position: " + sec.getPos());
+                            secStart = tmp.getTransductionUnitsRev();
+                        }
                         break;
                     case 225:
                         xlineTmp = tmp.getSourceMeasurementRev() - header.getSourceMeasurementRev();
                         if(tmp.getSourceMeasurementRev() > xlineMax) xlineMax = tmp.getSourceMeasurementRev(); 
+                        if(tmp.getSourceMeasurementRev() - prev.getSourceMeasurementRev() != xlineInc) 
+                        {
+                            Section sec = new Section(secStart, prev.getSourceMeasurementRev());
+                            sec.setPos(prevPos);
+                            line.addElement(sec);
+                            System.out.println("Add Section at " + i + " : " + sec.getStart() + " to " + sec.getEnd() + 
+                                    " Position: " + sec.getPos());
+                            secStart = tmp.getSourceMeasurementRev();
+                        }
                         break;
                     case 185:
                         xlineTmp = tmp.getyOfCDPPosition() - header.getyOfCDPPosition();
                         if(tmp.getyOfCDPPosition() > xlineMax) xlineMax = tmp.getyOfCDPPosition(); 
+                        if(tmp.getyOfCDPPosition() - prev.getyOfCDPPosition() != xlineInc) 
+                        {
+                            Section sec = new Section(secStart, prev.getyOfCDPPosition());
+                            sec.setPos(prevPos);
+                            line.addElement(sec);
+                            System.out.println("Add Section at " + i + " : " + sec.getStart() + " to " + sec.getEnd() + 
+                                    " Position: " + sec.getPos());
+                            secStart = tmp.getyOfCDPPosition();
+                        }
                         break;
                     case 17:
                         xlineTmp = tmp.getEnergySourcePointNumber() - header.getEnergySourcePointNumber();
                         if(tmp.getEnergySourcePointNumber() > xlineMax) xlineMax = tmp.getEnergySourcePointNumber(); 
+                        if(tmp.getEnergySourcePointNumber() - prev.getEnergySourcePointNumber() != xlineInc) 
+                        {
+                            Section sec = new Section(secStart, prev.getEnergySourcePointNumber());
+                            sec.setPos(prevPos);
+                            line.addElement(sec);
+                            System.out.println("Add Section at " + i + " : " + sec.getStart() + " to " + sec.getEnd() + 
+                                    " Position: " + sec.getPos());
+                            secStart = tmp.getEnergySourcePointNumber();
+                        }
                         break;
                 }
                 if(xlineTmp>0) {
@@ -342,6 +406,7 @@ public class SampleReadRoutine {
                     break;
                 }
             }
+            linesInfo.addElement(line);
         }
 
         System.out.println("Min Xline: " + xlineMin + ", Max Xline: " + xlineMax + 

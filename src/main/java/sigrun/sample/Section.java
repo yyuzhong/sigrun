@@ -4,6 +4,8 @@ public class Section {
 
     protected long start = 0;
     protected long end  = 0;
+    protected long pos  = 0;
+    
                     
     public Section() {}
                         
@@ -25,11 +27,19 @@ public class Section {
         this.end = end >= 0 ? end : 0;
     }
                                                 
+    public void setPos(long pos) {
+        this.pos = pos;
+    }
+
     public long getStart() {
          return start;
     }
                         
     public long getEnd() {
          return end;
+    }
+
+    public long getPos() {
+         return pos;
     }
 }

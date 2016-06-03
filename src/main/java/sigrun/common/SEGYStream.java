@@ -240,6 +240,19 @@ public class SEGYStream implements Iterable<LiteSeismicTrace>, Closeable {
         }
         return true;
     }
+
+    public long getPos() {
+        try {
+            if (!chan.isOpen()) {
+                return -1;
+            }
+            return chan.position();
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage());
+        }
+        return -1;
+    }
+
     /*YZ, end of all*/
 
     private void increasePosition(long increment) {
