@@ -246,6 +246,8 @@ public class SampleReadRoutine {
         TraceHeader thd1 = segyStream.getTraceHeader(0,numSamples);
         TraceHeader thd2 = segyStream.getTraceHeader(1,numSamples);
 
+        Vector<Vector<Section>> lines = new Vector<Vector<Section>>();
+
         switch(xidx)
         {
             case 193:
@@ -270,9 +272,11 @@ public class SampleReadRoutine {
 
         int i = 0;
 
+        TraceHeader tmp = segyStream.getTraceHeader(i,numSamples);
         while(i<numTraces-1)
         {
-            TraceHeader header = segyStream.getTraceHeader(i,numSamples);
+            // TraceHeader header = segyStream.getTraceHeader(i,numSamples);
+            TraceHeader header = tmp;
             switch(xidx)
             {
                 case 193:
@@ -297,7 +301,7 @@ public class SampleReadRoutine {
 
             while(i<numTraces-1) {
                 i++;
-                TraceHeader tmp = segyStream.getTraceHeader(i,numSamples);
+                tmp = segyStream.getTraceHeader(i,numSamples);
                 boolean found = false;
 
                 //System.out.println("To check trace: " + i);
