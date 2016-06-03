@@ -26,7 +26,7 @@ public class SampleReadRoutine {
         return new ParseProgressListener() {
             @Override
             public void progress(long read) {
-                System.out.println("Progress changed to: " + read);
+                //System.out.println("Progress changed to: " + read);
             }
         };
     }
@@ -125,8 +125,15 @@ public class SampleReadRoutine {
             printTraceHeader(th2);
             printTraceHeader(thN);
 
-            //TraceHeader thM = getMaxXlineTraceHeader(segyStream, sn, tn);
             checkTraceHeaderConfig(th1,th2,thN,tn);
+
+            int xidx = checkXlineIndex(th1,th2);
+
+            TraceHeader ilinc = getInlineIncTrace(segyStream, sn, tn);
+            TraceHeader mxth = getMaxXlineTraceHeader(segyStream, sn, tn, xidx);
+
+            printTraceHeader(ilinc);
+            printTraceHeader(mxth);
 
             final long timeEnd = System.currentTimeMillis() - startTime;
             System.out.println("Parsing took: " + timeEnd + " ms.");
@@ -139,24 +146,160 @@ public class SampleReadRoutine {
         System.exit(0);
     }
 
-    private static TraceHeader getMaxXlineTraceHeader(SEGYStream segyStream, long numSamples, long numTraces) {
-        TraceHeader res = null;
+    private static int checkXlineIndex(TraceHeader thd1, TraceHeader thd2) {
+        int MAX_NUM = 10000000;
+        int res = -1;
 
-        TraceHeader prev = segyStream.getTraceHeader(0,numSamples);
-        for(int i=1;i<numTraces;i++)
+        int cln1 = thd1.getCrossLineNumber();
+        int cln2 = thd2.getCrossLineNumber();
+        if((cln1<MAX_NUM)&&(cln2<MAX_NUM)&&(cln2-cln1<1000)&&(cln2-cln1>0)) res = 193;
+
+        int en1 = thd1.getEnsembleNumber();
+        int en2 = thd2.getEnsembleNumber();
+        if((en1<MAX_NUM)&&(en2<MAX_NUM)&&(en2-en1<1000)&&(en2-en1>0)) res = 21;
+
+        int tu1 = thd1.getTransductionUnitsRev();
+        int tu2 = thd2.getTransductionUnitsRev();
+        if((tu1<MAX_NUM)&&(tu2<MAX_NUM)&&(tu2-tu1<1000)&&(tu2-tu1>0)) res = 209;
+
+        int sm1 = thd1.getSourceMeasurementRev();
+        int sm2 = thd2.getSourceMeasurementRev();
+        if((sm1<MAX_NUM)&&(sm2<MAX_NUM)&&(sm2-sm1<1000)&&(sm2-sm1>0)) res = 225;
+
+        int cdp1 = thd1.getyOfCDPPosition();
+        int cdp2 = thd2.getyOfCDPPosition();
+        if((cdp1<MAX_NUM)&&(cdp2<MAX_NUM)&&(cdp2-cdp1<1000)&&(cdp2-cdp1>0)) res = 185;
+
+        int espn1 = thd1.getEnergySourcePointNumber();
+        int espn2 = thd2.getEnergySourcePointNumber();
+        if((espn1<MAX_NUM)&&(espn2<MAX_NUM)&&(espn2-espn1<1000)&&(espn2-espn1>0)) res = 17;
+
+        System.out.println("Find Xline Index at:" + res);
+        return res;
+    }
+
+    private static TraceHeader getMaxXlineTraceHeader(SEGYStream segyStream, long numSamples, long numTraces, int xidx) {
+        TraceHeader res = null;
+        int i = 0;
+        int max1 = -1;
+        int max2 = -1;
+        int max3 = -1;
+        int max4 = -1;
+        int max5 = -1;
+        int max6 = -1;
+        while(i<numTraces-1)
         {
-            TraceHeader tmp = segyStream.getTraceHeader(i,numSamples);
-            if(prev.getCrossLineNumber() > tmp.getCrossLineNumber()) break;
-            if(prev.getEnsembleNumber() > tmp.getEnsembleNumber()) break;
-            if(prev.getTransductionUnitsRev() > tmp.getTransductionUnitsRev()) break;
-            if(prev.getSourceMeasurementRev() > tmp.getSourceMeasurementRev()) break;
-            if(prev.getyOfCDPPosition() > tmp.getyOfCDPPosition()) break;
-            if(prev.getEnergySourcePointNumber() > tmp.getEnergySourcePointNumber()) break;
+            TraceHeader prev = segyStream.getTraceHeader(i,numSamples);
             
-            prev = tmp;   
+            while(i<numTraces-1) {
+                i++;
+                TraceHeader tmp = segyStream.getTraceHeader(i,numSamples);
+                boolean found = false;
+
+                //System.out.println("To check trace: " + i);
+                switch(xidx)
+                {
+                    case 193:
+                        if(prev.getCrossLineNumber() < tmp.getCrossLineNumber()) 
+                        { 
+                            int tmp1 = tmp.getCrossLineNumber() - prev.getCrossLineNumber(); 
+                            if(max1<tmp1) { 
+                                max1 = tmp1;
+                                res = tmp;
+                            }
+                            found = true;
+                        }
+                        break;
+                    case 21: 
+                        if(prev.getEnsembleNumber() < tmp.getEnsembleNumber())
+                        {
+                            int tmp2 = tmp.getEnsembleNumber() - prev.getEnsembleNumber();
+                            if(max2<tmp2) { 
+                                max2 = tmp2;
+                                res = tmp;
+                            }
+                            found = true;
+                        }
+                        break;
+                    case 209:
+                        if(prev.getTransductionUnitsRev() < tmp.getTransductionUnitsRev())
+                        {
+                            int tmp3 = tmp.getTransductionUnitsRev() - prev.getTransductionUnitsRev();
+                            if(max3<tmp3) { 
+                                max3 = tmp3;
+                                res = tmp;
+                            }
+                            found = true;
+                        }
+                        break;
+                    case 225:
+                        if(prev.getSourceMeasurementRev() < tmp.getSourceMeasurementRev())
+                        {
+                            int tmp4 = tmp.getSourceMeasurementRev() - prev.getSourceMeasurementRev();
+                            if(max4<tmp4) { 
+                                max4 = tmp4;
+                                res = tmp;
+                            }
+                            found = true;
+                        }
+                        break;
+                    case 185:
+                        if(prev.getyOfCDPPosition() < tmp.getyOfCDPPosition())
+                        {
+                            int tmp5 = tmp.getyOfCDPPosition() - prev.getyOfCDPPosition();
+                            if(max5<tmp5) { 
+                                max5 = tmp5;
+                                res = tmp;
+                            }
+                            found = true;
+                        }
+                        break;
+                    case 17:
+                        if(prev.getEnergySourcePointNumber() < tmp.getEnergySourcePointNumber())
+                        {
+                            int tmp6 = tmp.getEnergySourcePointNumber() - prev.getEnergySourcePointNumber();
+                            if(max6<tmp6) { 
+                                max6 = tmp6;
+                                res = tmp;
+                            }
+                            found = true;
+                        }
+                        break;
+                }
+                if(!found) {
+                    break;
+                }
+                else {}
+            }
         }
 
-        return prev;
+        System.out.println("Max Xline:" + Math.max(max1,Math.max(max2,Math.max(max3,Math.max(max4,Math.max(max5,max6))))) );
+
+        return res;
+    }
+
+    private static TraceHeader getInlineIncTrace(SEGYStream segyStream, long numSamples, long numTraces) {
+
+        TraceHeader prev = segyStream.getTraceHeader(0,numSamples);
+        TraceHeader tmp = null;
+        int i = 1;
+
+        while(i < numTraces)
+        {
+            tmp = segyStream.getTraceHeader(i,numSamples);
+            if(prev.getInLineNumber() < tmp.getInLineNumber()) break;
+            if(prev.getSourceEnergyDirectionRev() < tmp.getSourceEnergyDirectionRev()) break;
+            if(prev.getTransductionConstantRev() < tmp.getTransductionConstantRev()) break;
+            if(prev.getTraceSequenceNumberWS() < tmp.getTraceSequenceNumberWS()) break;
+            if(prev.getOriginalFieldRecordNumber() < tmp.getOriginalFieldRecordNumber()) break;
+            if(prev.getTraceNumberWOFR() < tmp.getTraceNumberWOFR()) break;
+            if(prev.getxOfCDPPosition() < tmp.getxOfCDPPosition()) break;
+            
+            prev = tmp;   
+            i++;
+        }
+
+        return tmp;
     }
 
 
@@ -234,6 +377,132 @@ public class SampleReadRoutine {
 
                 xlinc = xl2 - xl1;
                 xlcount = (xlinc==0) ? 1:(int) Math.floor(1.5 + (xlN-xl1)/xlinc);
+                ilcount = (xlcount == 0) ? 1:(int) Math.floor(0.5 + numTraces / xlcount );
+                ilinc = (ilcount ==0) ? 0 : 1 + Math.abs(ilN - il1 - 1) / ilcount;
+                ilinc = (ilN>il1) ? ilinc: -ilinc;
+                ilcount = (ilinc ==0) ? 1: (int) Math.floor(1.5 + (ilN - il1) / ilinc);
+
+                System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxx"+x+"xxxxxxxxxxxxxxxxxxxxxx"); 
+                System.out.println("Xline Min: "  + xl1);
+                System.out.println("Xline 2: "  + xl2);
+                System.out.println("Xline Max: "  + xlN);
+                System.out.println("Xline Step: "  + xlinc);
+                System.out.println("Xline count: "  + xlcount);
+
+                System.out.println("Inline Min: "  + il1);
+                System.out.println("Inline Max: "  + ilN);
+                System.out.println("Inline Step: " + ilinc);
+                System.out.println("Inline Count: "  + ilcount);
+
+                System.out.println("Number of Traces " + numTraces);
+
+
+                if(cfgOK = (ilcount * xlcount == numTraces && xlcount > 1 && 
+                            Math.abs(xlinc) < 1000 && Math.abs(ilinc)<1000)) {
+                    System.out.println("******************" + x + "*********************"); 
+                    System.out.println("Xline Min: "  + xl1);
+                    System.out.println("Xline 2: "  + xl2);
+                    System.out.println("Xline Max: "  + xlN);
+                    System.out.println("Xline Step: "  + xlinc);
+                    System.out.println("Xline Count: "  + xlcount);
+                    System.out.println("Inline Min: " + il1);
+                    System.out.println("Inline Max: " + ilN);
+                    System.out.println("Inline Step: " + ilinc);
+                    System.out.println("Inline Count: " + ilcount);
+                    System.out.println("Number of Traces " + numTraces);
+                    break;
+                }
+            }
+            if(cfgOK) break;
+        }    
+
+        return cfgOK;
+    }
+
+    private static boolean checkMissingTraces(TraceHeader thd1, TraceHeader thd2, 
+            TraceHeader thdM, TraceHeader thdN, long numTraces) {
+        Vector<Integer> ilnPositions1 = new Vector<Integer>(4);
+        Vector<Integer> xlnPositions1 = new Vector<Integer>(4);
+        Vector<Integer> ilnPositions2 = new Vector<Integer>(4);
+        Vector<Integer> xlnPositions2 = new Vector<Integer>(4);
+        Vector<Integer> xlnPositionsM = new Vector<Integer>(4);
+        Vector<Integer> ilnPositionsN = new Vector<Integer>(4);
+        Vector<Integer> xlnPositionsN = new Vector<Integer>(4);
+
+        ilnPositions1.addElement(thd1.getInLineNumber()); /*189*/
+        ilnPositions1.addElement(thd1.getSourceEnergyDirectionRev()); /*221*/
+        ilnPositions1.addElement(thd1.getTransductionConstantRev()); /*205*/
+        ilnPositions1.addElement(thd1.getTraceSequenceNumberWS()); /*5*/
+        ilnPositions1.addElement(thd1.getOriginalFieldRecordNumber());/*9*/
+        ilnPositions1.addElement(thd1.getTraceNumberWOFR()); /*13*/
+        ilnPositions1.addElement(thd1.getxOfCDPPosition()); /*181*/
+
+        ilnPositions2.addElement(thd2.getInLineNumber());
+        ilnPositions2.addElement(thd2.getSourceEnergyDirectionRev());
+        ilnPositions2.addElement(thd2.getTransductionConstantRev());
+        ilnPositions2.addElement(thd2.getTraceSequenceNumberWS());
+        ilnPositions2.addElement(thd2.getOriginalFieldRecordNumber());
+        ilnPositions2.addElement(thd2.getTraceNumberWOFR());
+        ilnPositions2.addElement(thd2.getxOfCDPPosition());
+
+        ilnPositionsN.addElement(thdN.getInLineNumber());
+        ilnPositionsN.addElement(thdN.getSourceEnergyDirectionRev());
+        ilnPositionsN.addElement(thdN.getTransductionConstantRev());
+        ilnPositionsN.addElement(thdN.getTraceSequenceNumberWS());
+        ilnPositionsN.addElement(thdN.getOriginalFieldRecordNumber());
+        ilnPositionsN.addElement(thdN.getTraceNumberWOFR());
+        ilnPositionsN.addElement(thdN.getxOfCDPPosition());
+
+        xlnPositions1.addElement(thd1.getCrossLineNumber()); /*193*/
+        xlnPositions1.addElement(thd1.getEnsembleNumber());  /*21*/
+        xlnPositions1.addElement(thd1.getTransductionUnitsRev()); /*209*/
+        xlnPositions1.addElement(thd1.getSourceMeasurementRev()); /*225*/
+        xlnPositions1.addElement(thd1.getyOfCDPPosition()); /*185*/
+        xlnPositions1.addElement(thd1.getEnergySourcePointNumber()); /*17, YZ*/
+
+        xlnPositions2.addElement(thd2.getCrossLineNumber()); /*193*/
+        xlnPositions2.addElement(thd2.getEnsembleNumber());  /*21*/
+        xlnPositions2.addElement(thd2.getTransductionUnitsRev()); /*209*/
+        xlnPositions2.addElement(thd2.getSourceMeasurementRev()); /*225*/
+        xlnPositions2.addElement(thd2.getyOfCDPPosition()); /*185*/
+        xlnPositions2.addElement(thd2.getEnergySourcePointNumber()); /*17, YZ*/
+
+        xlnPositionsM.addElement(thdM.getCrossLineNumber()); /*193*/
+        xlnPositionsM.addElement(thdM.getEnsembleNumber());  /*21*/
+        xlnPositionsM.addElement(thdM.getTransductionUnitsRev()); /*209*/
+        xlnPositionsM.addElement(thdM.getSourceMeasurementRev()); /*225*/
+        xlnPositionsM.addElement(thdM.getyOfCDPPosition()); /*185*/
+        xlnPositionsM.addElement(thdM.getEnergySourcePointNumber()); /*17, YZ*/
+
+        xlnPositionsN.addElement(thdN.getCrossLineNumber()); /*193*/
+        xlnPositionsN.addElement(thdN.getEnsembleNumber());  /*21*/
+        xlnPositionsN.addElement(thdN.getTransductionUnitsRev()); /*209*/
+        xlnPositionsN.addElement(thdN.getSourceMeasurementRev()); /*225*/
+        xlnPositionsN.addElement(thdN.getyOfCDPPosition()); /*185*/
+        xlnPositionsN.addElement(thdN.getEnergySourcePointNumber()); /*17, YZ*/
+
+        int ilinSize = ilnPositions1.size();
+        int xlinSize = xlnPositions1.size();
+
+        int il1, il2, ilN, ilinc, ilcount;
+        int xl1, xl2, xlN, xlinc, xlcount;
+        int xlM;
+
+        boolean cfgOK = false;
+
+        for(int i=0; i<ilinSize; i++) {
+
+            il1 = ilnPositions1.get(i);
+            ilN = ilnPositionsN.get(i);
+            System.out.println("-------------------------------" + i + "---------------------------------"); 
+            for(int x=0; x<xlinSize; x++) {
+                xl1 = xlnPositions1.get(x);
+                xl2 = xlnPositions2.get(x);
+                xlN = xlnPositionsN.get(x);
+                xlM = xlnPositionsM.get(x);
+
+                xlinc = xl2 - xl1;
+                xlcount = (xlinc==0) ? 1:(int) Math.floor(1.5 + (Math.max(xlM,xlN)-xl1)/xlinc);
                 ilcount = (xlcount == 0) ? 1:(int) Math.floor(0.5 + numTraces / xlcount );
                 ilinc = (ilcount ==0) ? 0 : 1 + Math.abs(ilN - il1 - 1) / ilcount;
                 ilinc = (ilN>il1) ? ilinc: -ilinc;
