@@ -201,31 +201,32 @@ public class SampleReadRoutine {
 
     private static int checkXlineIndex(TraceHeader thd1, TraceHeader thd2) {
         int MAX_NUM = 10000000;
+        int MAX_INC = 1000;
         int res = -1;
 
         int cln1 = thd1.getCrossLineNumber();
         int cln2 = thd2.getCrossLineNumber();
-        if((cln1<MAX_NUM)&&(cln2<MAX_NUM)&&(cln2-cln1<1000)&&(cln2-cln1>0)) res = 193;
+        if((cln1<MAX_NUM)&&(cln2<MAX_NUM)&&(cln2-cln1<MAX_INC)&&(cln2-cln1>0)) res = 193;
 
         int en1 = thd1.getEnsembleNumber();
         int en2 = thd2.getEnsembleNumber();
-        if((en1<MAX_NUM)&&(en2<MAX_NUM)&&(en2-en1<1000)&&(en2-en1>0)) res = 21;
+        if((en1<MAX_NUM)&&(en2<MAX_NUM)&&(en2-en1<MAX_INC)&&(en2-en1>0)) res = 21;
 
         int tu1 = thd1.getTransductionUnitsRev();
         int tu2 = thd2.getTransductionUnitsRev();
-        if((tu1<MAX_NUM)&&(tu2<MAX_NUM)&&(tu2-tu1<1000)&&(tu2-tu1>0)) res = 209;
+        if((tu1<MAX_NUM)&&(tu2<MAX_NUM)&&(tu2-tu1<MAX_INC)&&(tu2-tu1>0)) res = 209;
 
         int sm1 = thd1.getSourceMeasurementRev();
         int sm2 = thd2.getSourceMeasurementRev();
-        if((sm1<MAX_NUM)&&(sm2<MAX_NUM)&&(sm2-sm1<1000)&&(sm2-sm1>0)) res = 225;
+        if((sm1<MAX_NUM)&&(sm2<MAX_NUM)&&(sm2-sm1<MAX_INC)&&(sm2-sm1>0)) res = 225;
 
         int cdp1 = thd1.getyOfCDPPosition();
         int cdp2 = thd2.getyOfCDPPosition();
-        if((cdp1<MAX_NUM)&&(cdp2<MAX_NUM)&&(cdp2-cdp1<1000)&&(cdp2-cdp1>0)) res = 185;
+        if((cdp1<MAX_NUM)&&(cdp2<MAX_NUM)&&(cdp2-cdp1<MAX_INC)&&(cdp2-cdp1>0)) res = 185;
 
         int espn1 = thd1.getEnergySourcePointNumber();
         int espn2 = thd2.getEnergySourcePointNumber();
-        if((espn1<MAX_NUM)&&(espn2<MAX_NUM)&&(espn2-espn1<1000)&&(espn2-espn1>0)) res = 17;
+        if((espn1<MAX_NUM)&&(espn2<MAX_NUM)&&(espn2-espn1<MAX_INC)&&(espn2-espn1>0)) res = 17;
 
         System.out.println("Find Xline Index at:" + res);
         return res;
@@ -380,6 +381,7 @@ public class SampleReadRoutine {
 
     private static boolean checkTraceHeaderConfig(TraceHeader thd1, TraceHeader thd2, 
             TraceHeader thdN, long numTraces) {
+        int MAX_INC = 1000;
         Vector<Integer> ilnPositions1 = new Vector<Integer>(4);
         Vector<Integer> xlnPositions1 = new Vector<Integer>(4);
         Vector<Integer> ilnPositions2 = new Vector<Integer>(4);
@@ -456,7 +458,7 @@ public class SampleReadRoutine {
                 ilinc = (ilcount ==0) ? 0 : 1 + Math.abs(ilN - il1 - 1) / ilcount;
                 ilinc = (ilN>il1) ? ilinc: -ilinc;
                 ilcount = (ilinc ==0) ? 1: (int) Math.floor(1.5 + (ilN - il1) / ilinc);
-
+                /*
                 System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxx"+x+"xxxxxxxxxxxxxxxxxxxxxx"); 
                 System.out.println("Xline Min: "  + xl1);
                 System.out.println("Xline 2: "  + xl2);
@@ -470,10 +472,10 @@ public class SampleReadRoutine {
                 System.out.println("Inline Count: "  + ilcount);
 
                 System.out.println("Number of Traces " + numTraces);
-
+                */
 
                 if(cfgOK = (ilcount * xlcount == numTraces && xlcount > 1 && 
-                            Math.abs(xlinc) < 1000 && Math.abs(ilinc)<1000)) {
+                            Math.abs(xlinc) < MAX_INC && Math.abs(ilinc)<MAX_INC)) {
                     System.out.println("******************" + x + "*********************"); 
                     System.out.println("Xline Min: "  + xl1);
                     System.out.println("Xline 2: "  + xl2);
@@ -496,6 +498,7 @@ public class SampleReadRoutine {
 
     private static boolean checkMissingTraces(TraceHeader thd1, TraceHeader thd2, 
             TraceHeader thdM, TraceHeader thdN, long numTraces) {
+        int MAX_INC = 1000;
         Vector<Integer> ilnPositions1 = new Vector<Integer>(4);
         Vector<Integer> xlnPositions1 = new Vector<Integer>(4);
         Vector<Integer> ilnPositions2 = new Vector<Integer>(4);
@@ -599,7 +602,7 @@ public class SampleReadRoutine {
 
 
                 if(cfgOK = (ilcount * xlcount == numTraces && xlcount > 1 && 
-                            Math.abs(xlinc) < 100000 && Math.abs(ilinc)<100000)) {
+                            Math.abs(xlinc) < MAX_INC && Math.abs(ilinc) < MAX_INC)) {
                     System.out.println("******************" + x + "*********************"); 
                     System.out.println("Xline Min: "  + xl1);
                     System.out.println("Xline 2: "  + xl2);
