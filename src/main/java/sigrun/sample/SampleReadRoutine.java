@@ -130,12 +130,14 @@ public class SampleReadRoutine {
             int xidx = checkXlineIndex(th1,th2);
 
             TraceHeader ilinc = getInlineIncTrace(segyStream, sn, tn);
-            printTraceHeader(ilinc);
+            //printTraceHeader(ilinc);
             int iidx = checkInlineIndex(th1,th2,ilinc);
 
-            TraceHeader mxth = getMaxXlineTraceHeader(segyStream, sn, tn, xidx);
+            TraceHeader mxth = getXlineTraceInfo(segyStream, sn, tn, xidx);
 
-            printTraceHeader(mxth);
+            getInlineTraceInfo(th1,ilinc,thN,iidx);
+
+            //printTraceHeader(mxth);
 
             final long timeEnd = System.currentTimeMillis() - startTime;
             System.out.println("Parsing took: " + timeEnd + " ms.");
@@ -232,13 +234,14 @@ public class SampleReadRoutine {
         return res;
     }
 
-    private static TraceHeader getMaxXlineTraceHeader(SEGYStream segyStream, long numSamples, long numTraces, int xidx) {
+    private static TraceHeader getXlineTraceInfo(SEGYStream segyStream, long numSamples, long numTraces, int xidx) {
         TraceHeader res = null;
         int i = 0;
         int xlineDiff = Integer.MIN_VALUE;
         int xlineMax = Integer.MIN_VALUE;
         int xlineTmp = -1;
         int xlineMin = Integer.MAX_VALUE;
+        int xlineInc = 0;
 
         while(i<numTraces-1)
         {
@@ -310,9 +313,85 @@ public class SampleReadRoutine {
             }
         }
 
-        System.out.println("Min Xline: " + xlineMin + ", Max Xline: " + xlineMax + ", Max Diff: " + xlineDiff);
+        TraceHeader thd1 = segyStream.getTraceHeader(0,numSamples);
+        TraceHeader thd2 = segyStream.getTraceHeader(1,numSamples);
+
+        switch(xidx)
+        {
+            case 193:
+                xlineInc = thd2.getCrossLineNumber() - thd1.getCrossLineNumber(); 
+                break;
+            case 21: 
+                xlineInc = thd2.getEnsembleNumber() - thd1.getEnsembleNumber(); 
+                break;
+            case 209:
+                xlineInc = thd2.getTransductionUnitsRev() - thd1.getTransductionUnitsRev();
+                break;
+            case 225:
+                xlineInc = thd2.getSourceMeasurementRev() - thd1.getSourceMeasurementRev();
+                break;
+            case 185:
+                xlineInc = thd2.getyOfCDPPosition() - thd1.getyOfCDPPosition();
+                break;
+            case 17:
+                xlineInc = thd2.getEnergySourcePointNumber() - thd1.getEnergySourcePointNumber();
+                break;
+        }
+
+        System.out.println("Min Xline: " + xlineMin + ", Max Xline: " + xlineMax + 
+                " Inc: " + xlineInc + ", Max Diff: " + xlineDiff);
 
         return res;
+    }
+
+    private static boolean getInlineTraceInfo(TraceHeader thd1, TraceHeader ilinc, TraceHeader thdN, int iidx) {
+        boolean res = false;
+        
+        int inlineInc = Integer.MIN_VALUE;
+        int inlineMax = Integer.MIN_VALUE;
+        int inlineMin = Integer.MAX_VALUE;
+
+        switch(iidx)
+        {
+            case 189:
+                inlineMin = thd1.getInLineNumber();
+                inlineInc = ilinc.getInLineNumber() - thd1.getInLineNumber();
+                inlineMax = thdN.getInLineNumber();
+                break;
+            case 221:
+                inlineMin = thd1.getSourceEnergyDirectionRev();
+                inlineInc = ilinc.getSourceEnergyDirectionRev() - thd1.getSourceEnergyDirectionRev();
+                inlineMax = thdN.getSourceEnergyDirectionRev();
+                break;
+            case 205:
+                inlineMin = thd1.getTransductionConstantRev();
+                inlineInc = ilinc.getTransductionConstantRev() - thd1.getTransductionConstantRev();
+                inlineMax = thdN.getTransductionConstantRev();
+                break;
+            case 5:
+                inlineMin = thd1.getTraceSequenceNumberWS();
+                inlineInc = ilinc.getTraceSequenceNumberWS() - thd1.getTraceSequenceNumberWS();
+                inlineMax = thdN.getTraceSequenceNumberWS();
+                break;
+            case 9:
+                inlineMin = thd1.getOriginalFieldRecordNumber();
+                inlineInc = ilinc.getOriginalFieldRecordNumber() - thd1.getOriginalFieldRecordNumber();
+                inlineMax = thdN.getOriginalFieldRecordNumber();
+                break;
+            case 13:
+                inlineMin = thd1.getTraceNumberWOFR();
+                inlineInc = ilinc.getTraceNumberWOFR() - thd1.getTraceNumberWOFR();
+                inlineMax = thdN.getTraceNumberWOFR();
+                break;
+            case 181:
+                inlineMin = thd1.getxOfCDPPosition();
+                inlineInc = ilinc.getxOfCDPPosition() - thd1.getxOfCDPPosition();
+                inlineMax = thdN.getxOfCDPPosition();
+                break;
+        }
+        
+        System.out.println("Min Inline: " + inlineMin + ", Max Xline: " + inlineMax + ", Inc: " + inlineInc);
+        return true;
     }
 
     private static TraceHeader getInlineIncTrace(SEGYStream segyStream, long numSamples, long numTraces) {
