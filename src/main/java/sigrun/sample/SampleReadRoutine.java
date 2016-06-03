@@ -235,12 +235,36 @@ public class SampleReadRoutine {
     private static TraceHeader getMaxXlineTraceHeader(SEGYStream segyStream, long numSamples, long numTraces, int xidx) {
         TraceHeader res = null;
         int i = 0;
-        int xlineMax = -1;
+        int xlineDiff = Integer.MIN_VALUE;
+        int xlineMax = Integer.MIN_VALUE;
         int xlineTmp = -1;
+        int xlineMin = Integer.MAX_VALUE;
+
         while(i<numTraces-1)
         {
             TraceHeader header = segyStream.getTraceHeader(i,numSamples);
-            
+            switch(xidx)
+            {
+                case 193:
+                     if(header.getCrossLineNumber() < xlineMin) xlineMin = header.getCrossLineNumber(); 
+                     break;
+                case 21:
+                     if(header.getEnsembleNumber() < xlineMin) xlineMin = header.getEnsembleNumber(); 
+                     break;
+                case 209:
+                     if(header.getTransductionUnitsRev() < xlineMin) xlineMin = header.getTransductionUnitsRev(); 
+                     break;
+                case 225:
+                     if(header.getSourceMeasurementRev() < xlineMin) xlineMin = header.getSourceMeasurementRev(); 
+                     break;
+                case 185:
+                     if(header.getyOfCDPPosition() < xlineMin) xlineMin = header.getyOfCDPPosition(); 
+                     break;
+                case 17:
+                     if(header.getEnergySourcePointNumber() < xlineMin) xlineMin = header.getEnergySourcePointNumber(); 
+                     break;
+            }
+
             while(i<numTraces-1) {
                 i++;
                 TraceHeader tmp = segyStream.getTraceHeader(i,numSamples);
@@ -251,26 +275,32 @@ public class SampleReadRoutine {
                 {
                     case 193:
                         xlineTmp = tmp.getCrossLineNumber() - header.getCrossLineNumber(); 
+                        if(tmp.getCrossLineNumber() > xlineMax) xlineMax = tmp.getCrossLineNumber(); 
                         break;
                     case 21: 
                         xlineTmp = tmp.getEnsembleNumber() - header.getEnsembleNumber(); 
+                        if(tmp.getEnsembleNumber() > xlineMax) xlineMax = tmp.getEnsembleNumber(); 
                         break;
                     case 209:
                         xlineTmp = tmp.getTransductionUnitsRev() - header.getTransductionUnitsRev();
+                        if(tmp.getTransductionUnitsRev() > xlineMax) xlineMax = tmp.getTransductionUnitsRev(); 
                         break;
                     case 225:
                         xlineTmp = tmp.getSourceMeasurementRev() - header.getSourceMeasurementRev();
+                        if(tmp.getSourceMeasurementRev() > xlineMax) xlineMax = tmp.getSourceMeasurementRev(); 
                         break;
                     case 185:
                         xlineTmp = tmp.getyOfCDPPosition() - header.getyOfCDPPosition();
+                        if(tmp.getyOfCDPPosition() > xlineMax) xlineMax = tmp.getyOfCDPPosition(); 
                         break;
                     case 17:
                         xlineTmp = tmp.getEnergySourcePointNumber() - header.getEnergySourcePointNumber();
+                        if(tmp.getEnergySourcePointNumber() > xlineMax) xlineMax = tmp.getEnergySourcePointNumber(); 
                         break;
                 }
                 if(xlineTmp>0) {
-                    if(xlineMax < xlineTmp) {
-                        xlineMax = xlineTmp;
+                    if(xlineDiff < xlineTmp) {
+                        xlineDiff = xlineTmp;
                         res = tmp;
                     }
                     found = true;
@@ -280,7 +310,7 @@ public class SampleReadRoutine {
             }
         }
 
-        System.out.println("Max Xline:" + xlineMax);
+        System.out.println("Min Xline: " + xlineMin + ", Max Xline: " + xlineMax + ", Max Diff: " + xlineDiff);
 
         return res;
     }
