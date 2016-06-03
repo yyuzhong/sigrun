@@ -130,9 +130,11 @@ public class SampleReadRoutine {
             int xidx = checkXlineIndex(th1,th2);
 
             TraceHeader ilinc = getInlineIncTrace(segyStream, sn, tn);
+            printTraceHeader(ilinc);
+            int iidx = checkInlineIndex(th1,th2,ilinc);
+
             TraceHeader mxth = getMaxXlineTraceHeader(segyStream, sn, tn, xidx);
 
-            printTraceHeader(ilinc);
             printTraceHeader(mxth);
 
             final long timeEnd = System.currentTimeMillis() - startTime;
@@ -144,6 +146,57 @@ public class SampleReadRoutine {
 
 
         System.exit(0);
+    }
+
+    private static int checkInlineIndex(TraceHeader thd1, TraceHeader thd2, TraceHeader ilinc) {
+        int MAX_NUM = 10000000;
+        int MAX_INC = 1000;
+        int res = -1;
+
+        int iln1 = thd1.getInLineNumber();
+        int iln2 = thd2.getInLineNumber();
+        int ilnc = ilinc.getInLineNumber();
+        if((iln1<MAX_NUM)&&(iln2<MAX_NUM)&&(ilnc<MAX_NUM)&&
+                (iln2==iln1)&&(ilnc-iln1<MAX_INC)&&(ilnc-iln1>0)) res = 189;
+
+        int sed1 = thd1.getSourceEnergyDirectionRev();
+        int sed2 = thd2.getSourceEnergyDirectionRev();
+        int sedc = ilinc.getSourceEnergyDirectionRev();
+        if((sed1<MAX_NUM)&&(sed2<MAX_NUM)&&(sedc<MAX_NUM)&&
+                (sed2==sed1)&&(sedc-sed1<MAX_INC)&&(sedc-sed1>0)) res = 221;
+
+        int tc1 = thd1.getTransductionConstantRev();
+        int tc2 = thd2.getTransductionConstantRev();
+        int tcc = ilinc.getTransductionConstantRev();
+        if((tc1<MAX_NUM)&&(tc2<MAX_NUM)&&(tcc<MAX_NUM)&&
+                (tc2==tc1)&&(tcc-tc1<MAX_INC)&&(tcc-tc1>0)) res = 205;
+
+        int tsn1 = thd1.getTraceSequenceNumberWS();
+        int tsn2 = thd2.getTraceSequenceNumberWS();
+        int tsnc = ilinc.getTraceSequenceNumberWS();
+        if((tsn1<MAX_NUM)&&(tsn2<MAX_NUM)&&(tsnc<MAX_NUM)&&
+                (tsn2==tsn1)&&(tsnc-tsn1<MAX_INC)&&(tsnc-tsn1>0)) res = 5;
+
+        int ofrn1 = thd1.getOriginalFieldRecordNumber();
+        int ofrn2 = thd2.getOriginalFieldRecordNumber();
+        int ofrnc = ilinc.getOriginalFieldRecordNumber();
+        if((ofrn1<MAX_NUM)&&(ofrn2<MAX_NUM)&&(ofrnc<MAX_NUM)&&
+                (ofrn2==ofrn1)&&(ofrnc-ofrn1<MAX_INC)&&(ofrnc-ofrn1>0)) res = 9;
+
+        int tn1 = thd1.getTraceNumberWOFR();
+        int tn2 = thd2.getTraceNumberWOFR();
+        int tnc = ilinc.getTraceNumberWOFR();
+        if((tn1<MAX_NUM)&&(tn2<MAX_NUM)&&(tnc<MAX_NUM)&&
+                (tn2==tn1)&&(tnc-tn1<MAX_INC)&&(tnc-tn1>0)) res = 13;
+
+        int cdp1 = thd1.getxOfCDPPosition();
+        int cdp2 = thd2.getxOfCDPPosition();
+        int cdpc = ilinc.getxOfCDPPosition();
+        if((cdp1<MAX_NUM)&&(cdp2<MAX_NUM)&&(cdpc<MAX_NUM)&&
+                (cdp2==cdp1)&&(cdpc-cdp1<MAX_INC)&&(cdpc-cdp1>0)) res = 181;
+
+        System.out.println("Find Inline Index at:" + res);
+        return res;
     }
 
     private static int checkXlineIndex(TraceHeader thd1, TraceHeader thd2) {
@@ -189,7 +242,7 @@ public class SampleReadRoutine {
         int max6 = -1;
         while(i<numTraces-1)
         {
-            TraceHeader prev = segyStream.getTraceHeader(i,numSamples);
+            TraceHeader header = segyStream.getTraceHeader(i,numSamples);
             
             while(i<numTraces-1) {
                 i++;
@@ -200,9 +253,9 @@ public class SampleReadRoutine {
                 switch(xidx)
                 {
                     case 193:
-                        if(prev.getCrossLineNumber() < tmp.getCrossLineNumber()) 
+                        if(header.getCrossLineNumber() < tmp.getCrossLineNumber()) 
                         { 
-                            int tmp1 = tmp.getCrossLineNumber() - prev.getCrossLineNumber(); 
+                            int tmp1 = tmp.getCrossLineNumber() - header.getCrossLineNumber(); 
                             if(max1<tmp1) { 
                                 max1 = tmp1;
                                 res = tmp;
@@ -211,9 +264,9 @@ public class SampleReadRoutine {
                         }
                         break;
                     case 21: 
-                        if(prev.getEnsembleNumber() < tmp.getEnsembleNumber())
+                        if(header.getEnsembleNumber() < tmp.getEnsembleNumber())
                         {
-                            int tmp2 = tmp.getEnsembleNumber() - prev.getEnsembleNumber();
+                            int tmp2 = tmp.getEnsembleNumber() - header.getEnsembleNumber();
                             if(max2<tmp2) { 
                                 max2 = tmp2;
                                 res = tmp;
@@ -222,9 +275,9 @@ public class SampleReadRoutine {
                         }
                         break;
                     case 209:
-                        if(prev.getTransductionUnitsRev() < tmp.getTransductionUnitsRev())
+                        if(header.getTransductionUnitsRev() < tmp.getTransductionUnitsRev())
                         {
-                            int tmp3 = tmp.getTransductionUnitsRev() - prev.getTransductionUnitsRev();
+                            int tmp3 = tmp.getTransductionUnitsRev() - header.getTransductionUnitsRev();
                             if(max3<tmp3) { 
                                 max3 = tmp3;
                                 res = tmp;
@@ -233,9 +286,9 @@ public class SampleReadRoutine {
                         }
                         break;
                     case 225:
-                        if(prev.getSourceMeasurementRev() < tmp.getSourceMeasurementRev())
+                        if(header.getSourceMeasurementRev() < tmp.getSourceMeasurementRev())
                         {
-                            int tmp4 = tmp.getSourceMeasurementRev() - prev.getSourceMeasurementRev();
+                            int tmp4 = tmp.getSourceMeasurementRev() - header.getSourceMeasurementRev();
                             if(max4<tmp4) { 
                                 max4 = tmp4;
                                 res = tmp;
@@ -244,9 +297,9 @@ public class SampleReadRoutine {
                         }
                         break;
                     case 185:
-                        if(prev.getyOfCDPPosition() < tmp.getyOfCDPPosition())
+                        if(header.getyOfCDPPosition() < tmp.getyOfCDPPosition())
                         {
-                            int tmp5 = tmp.getyOfCDPPosition() - prev.getyOfCDPPosition();
+                            int tmp5 = tmp.getyOfCDPPosition() - header.getyOfCDPPosition();
                             if(max5<tmp5) { 
                                 max5 = tmp5;
                                 res = tmp;
@@ -255,9 +308,9 @@ public class SampleReadRoutine {
                         }
                         break;
                     case 17:
-                        if(prev.getEnergySourcePointNumber() < tmp.getEnergySourcePointNumber())
+                        if(header.getEnergySourcePointNumber() < tmp.getEnergySourcePointNumber())
                         {
-                            int tmp6 = tmp.getEnergySourcePointNumber() - prev.getEnergySourcePointNumber();
+                            int tmp6 = tmp.getEnergySourcePointNumber() - header.getEnergySourcePointNumber();
                             if(max6<tmp6) { 
                                 max6 = tmp6;
                                 res = tmp;
@@ -281,19 +334,41 @@ public class SampleReadRoutine {
     private static TraceHeader getInlineIncTrace(SEGYStream segyStream, long numSamples, long numTraces) {
 
         TraceHeader prev = segyStream.getTraceHeader(0,numSamples);
-        TraceHeader tmp = null;
-        int i = 1;
+        TraceHeader tmp = segyStream.getTraceHeader(1,numSamples);;
+
+        boolean ininc = false;
+        boolean sedinc = false;
+        boolean tcinc = false;
+        boolean tsninc = false;
+        boolean ofrninc = false;
+        boolean tninc = false;
+        boolean cdpinc = false;
+        if(prev.getInLineNumber() < tmp.getInLineNumber()) ininc = true;
+        if(prev.getSourceEnergyDirectionRev() < tmp.getSourceEnergyDirectionRev()) sedinc = true;
+        if(prev.getTransductionConstantRev() < tmp.getTransductionConstantRev()) tcinc = true;
+        if(prev.getTraceSequenceNumberWS() < tmp.getTraceSequenceNumberWS()) tsninc = true;
+        if(prev.getOriginalFieldRecordNumber() < tmp.getOriginalFieldRecordNumber()) ofrninc = true;
+        if(prev.getTraceNumberWOFR() < tmp.getTraceNumberWOFR()) tninc = true;
+        if(prev.getxOfCDPPosition() < tmp.getxOfCDPPosition()) cdpinc = true;
+
+        //System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&");
+        //printTraceHeader(prev);
+        //printTraceHeader(tmp);
+
+        prev = tmp;
+
+        int i = 2;
 
         while(i < numTraces)
         {
             tmp = segyStream.getTraceHeader(i,numSamples);
-            if(prev.getInLineNumber() < tmp.getInLineNumber()) break;
-            if(prev.getSourceEnergyDirectionRev() < tmp.getSourceEnergyDirectionRev()) break;
-            if(prev.getTransductionConstantRev() < tmp.getTransductionConstantRev()) break;
-            if(prev.getTraceSequenceNumberWS() < tmp.getTraceSequenceNumberWS()) break;
-            if(prev.getOriginalFieldRecordNumber() < tmp.getOriginalFieldRecordNumber()) break;
-            if(prev.getTraceNumberWOFR() < tmp.getTraceNumberWOFR()) break;
-            if(prev.getxOfCDPPosition() < tmp.getxOfCDPPosition()) break;
+            if(prev.getInLineNumber() < tmp.getInLineNumber() && !ininc) break;
+            if(prev.getSourceEnergyDirectionRev() < tmp.getSourceEnergyDirectionRev() && !sedinc) break;
+            if(prev.getTransductionConstantRev() < tmp.getTransductionConstantRev() && !tcinc) break;
+            if(prev.getTraceSequenceNumberWS() < tmp.getTraceSequenceNumberWS() && !tsninc) break;
+            if(prev.getOriginalFieldRecordNumber() < tmp.getOriginalFieldRecordNumber() && !ofrninc) break;
+            if(prev.getTraceNumberWOFR() < tmp.getTraceNumberWOFR() && ! tninc) break;
+            if(prev.getxOfCDPPosition() < tmp.getxOfCDPPosition() && !cdpinc) break;
             
             prev = tmp;   
             i++;
